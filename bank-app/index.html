@@ -40,6 +40,16 @@ body{
 .scroll-content{flex:1;overflow-y:auto;scrollbar-width:none;}
 .scroll-content::-webkit-scrollbar{display:none;}
 
+/* ── Access Code ─────────────────────────── */
+#screen-access{background:linear-gradient(170deg,#0e0e1c 0%,#1a0d2e 60%,#0d1a2e 100%);justify-content:center;padding:28px 24px;}
+.access-inner{display:flex;flex-direction:column;align-items:center;text-align:center;}
+.access-title{font-size:23px;font-weight:900;color:#fff;margin-bottom:8px;}
+.access-sub{font-size:13px;color:rgba(255,255,255,.45);margin-bottom:26px;}
+.access-input{width:100%;padding:16px;border:1.5px solid rgba(255,255,255,.1);border-radius:16px;background:rgba(255,255,255,.04);color:#fff;font-size:18px;font-weight:700;letter-spacing:2px;text-align:center;outline:none;}
+.access-input:focus{border-color:rgba(124,58,237,.7);}
+.access-error{min-height:20px;margin-top:8px;color:#f87171;font-size:12px;}
+.access-btn{margin-top:14px;padding:15px;width:100%;background:linear-gradient(135deg,#7c3aed,#2563eb);border:none;border-radius:16px;color:#fff;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 8px 24px rgba(124,58,237,.3);}
+
 /* ── Bottom Nav ──────────────────────────── */
 .bottom-nav{
   height:80px;background:rgba(14,14,28,.95);border-top:1px solid rgba(255,255,255,.06);
@@ -423,10 +433,22 @@ body{
   </div>
 </div>
 
+<!-- ACCESS CODE -->
+<div class="screen active" id="screen-access">
+  <form class="access-inner" onsubmit="return unlockApp(event)">
+    <div class="nova-logo">✦</div>
+    <div class="access-title">Bienvenue sur NOVA</div>
+    <div class="access-sub">Saisissez votre code d’accès pour continuer.</div>
+    <input class="access-input" id="access-code" type="password" aria-label="Code d’accès" placeholder="Code d’accès" autocomplete="off" autocapitalize="off" spellcheck="false" required>
+    <div class="access-error" id="access-error" role="alert" aria-live="polite"></div>
+    <button class="access-btn" type="submit">Accéder à l’application →</button>
+  </form>
+</div>
+
 <!-- ═══════════════════════════════════════════════
      SCREEN OB-0 : PERSONA SELECTION
 ═══════════════════════════════════════════════ -->
-<div class="screen active" id="screen-ob0">
+<div class="screen" id="screen-ob0">
 <div class="ob0-inner">
   <div class="ob0-header">
     <div class="nova-logo">✦</div>
@@ -886,6 +908,8 @@ const PERSONAS = {
   pro:      { label:'Pro premium',         emoji:'💼' },
 };
 
+const ACCESS_CODE = 'L6tul034ZI';
+
 /* ── State ─────────────────────────────────── */
 const S = {
   persona: null,
@@ -897,6 +921,23 @@ const S = {
   recipient: 'Thomas M.',
 };
 OFFERS.forEach(o => S.offerPts[o.id] = 0);
+
+/* ── Access Code ───────────────────────────── */
+function unlockApp(event) {
+  event.preventDefault();
+  const input = document.getElementById('access-code');
+  const error = document.getElementById('access-error');
+  if (input.value !== ACCESS_CODE) {
+    error.textContent = 'Code incorrect. Veuillez réessayer.';
+    input.value = '';
+    input.focus();
+    return false;
+  }
+  error.textContent = '';
+  input.value = '';
+  navigate('ob0');
+  return false;
+}
 
 /* ── Persona Selection ─────────────────────── */
 function selectPersona(card) {
@@ -1080,7 +1121,9 @@ function resetAll() {
   ['q1y','q1n','q2y','q2n'].forEach(id=>document.getElementById(id).classList.remove('sel'));
   document.getElementById('ob1-next').disabled=true;
   S.q1=null; S.q2=null;
-  navigate('ob0');
+  document.getElementById('access-code').value = '';
+  document.getElementById('access-error').textContent = '';
+  navigate('access');
 }
 
 /* ── Transfer ──────────────────────────────── */

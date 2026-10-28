@@ -22,6 +22,7 @@ Le projet est volontairement léger : l’application est réalisée dans un seu
 
 ### Écrans de démonstration
 
+- **Code d’accès** : écran initial demandant un code avant d’afficher le parcours de personnalisation.
 - **Accueil** : solde et cartes fictifs, raccourcis, quelques transactions récentes et offres personnalisées.
 - **Transactions** : liste statique de transactions et boutons de filtre qui permettent de modifier le filtre visuellement.
 - **Virement** : contacts prédéfinis, pavé numérique, saisie du montant et écran de confirmation simulé.
@@ -72,6 +73,7 @@ Les numéros de ligne sont indicatifs et peuvent changer avec les modifications.
 ## Limites actuelles
 
 - L’état est conservé uniquement en mémoire JavaScript ; recharger la page le réinitialise.
+- Le code d’accès est vérifié côté navigateur et figure dans le code source. Cet écran est uniquement un verrou de démonstration : il ne protège pas réellement l’application ni ses données.
 - Les noms, soldes, cartes, IBAN, transactions, statistiques et points affichés sont fictifs et codés en dur.
 - Le virement ne contacte aucune banque, ne débite pas de solde et ne crée pas de transaction ; il affiche seulement une confirmation.
 - Les filtres de transactions changent l’apparence du bouton sélectionné, mais ne filtrent pas la liste.
