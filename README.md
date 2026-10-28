@@ -6,7 +6,7 @@
 
 Ce dépôt contient **NOVA Bank**, un prototype interactif d’application bancaire mobile, présenté dans une coque de téléphone et conçu en français. Il explore un parcours d’accueil personnalisé autour de profils clients, de questions sur des abonnements et de la répartition de points entre des offres partenaires.
 
-Le projet est volontairement léger : l’application est réalisée dans un seul fichier HTML, sans framework, dépendance à installer, serveur applicatif ni service bancaire connecté.
+L’interface et ses interactions sont réalisées dans un fichier HTML autonome. Un petit point d’entrée Python l’intègre dans Streamlit pour permettre son déploiement sur Streamlit Community Cloud. Aucun service bancaire n’est connecté.
 
 > **Prototype uniquement :** les soldes, transactions, coordonnées, points et confirmations de virement sont des données de démonstration. Aucun compte réel, paiement ou virement bancaire n’est effectué.
 
@@ -30,36 +30,49 @@ Le projet est volontairement léger : l’application est réalisée dans un seu
 
 La navigation principale donne accès à l’accueil, aux transactions, aux virements et au profil. Des notifications temporaires illustrent certaines actions rapides.
 
-## Démarrer
+## Démarrer localement
 
-Aucune installation n’est nécessaire. Ouvrir [`bank-app/index.html`](bank-app/index.html) directement dans un navigateur moderne.
+### Dans un navigateur
 
-Pour servir le fichier localement, si Python est déjà installé :
+Aucune installation n’est nécessaire pour ouvrir [`bank-app/index.html`](bank-app/index.html) directement dans un navigateur moderne.
+
+### Avec Streamlit
 
 ```bash
-python -m http.server 8000
+python -m pip install -r requirements.txt
+python -m streamlit run app.py
 ```
 
-Puis ouvrir <http://localhost:8000/bank-app/>. Depuis la racine du dépôt, cette commande sert le dossier du projet ; il est également possible de lancer le serveur depuis `bank-app/` pour ouvrir l’application sur <http://localhost:8000/>.
+Streamlit affiche l’application à l’adresse indiquée dans le terminal, généralement <http://localhost:8501/>.
+
+## Déployer sur Streamlit Community Cloud
+
+1. Pousser ce dépôt GitHub avec `app.py`, `requirements.txt` et `bank-app/index.html`.
+2. Dans [Streamlit Community Cloud](https://share.streamlit.io/), créer une application et sélectionner ce dépôt ainsi que la branche à déployer.
+3. Définir `app.py` comme fichier principal, puis lancer le déploiement.
+
+Streamlit lit le fichier HTML depuis le dépôt et l’affiche dans un composant intégré. Toute modification de l’interface doit donc rester dans `bank-app/index.html`, à côté du point d’entrée `app.py`.
 
 ## Structure du dépôt
 
 ```text
 .
 ├── README.md
+├── app.py            # Point d’entrée Streamlit Cloud
+├── requirements.txt  # Dépendance Python pour Streamlit
 └── bank-app/
     └── index.html    # Application complète : HTML, CSS et JavaScript
 ```
 
-Il n’y a actuellement ni `package.json`, ni configuration de build, ni suite de tests automatisés, ni backend.
+Il n’y a actuellement ni `package.json`, ni configuration de build front-end, ni suite de tests automatisés, ni backend.
 
 ## Repères dans le code
 
-Tout le code de l’application se trouve dans [`bank-app/index.html`](bank-app/index.html) :
+Le rendu Streamlit est géré par [`app.py`](app.py), qui charge [`bank-app/index.html`](bank-app/index.html) dans un composant HTML. Le code de l’interface elle-même se trouve dans ce fichier HTML :
 
-- **Lignes 1–445 environ — styles CSS** : mise en page de la coque mobile, composants et apparence des écrans.
-- **À partir d’environ la ligne 446 — structure HTML** : écrans d’accueil initial, questions, offres, motivations, accueil, transactions, virements et profil.
-- **À partir d’environ la ligne 888 — JavaScript** : données de démonstration, état en mémoire et interactions.
+- **Lignes 1–422 environ — styles CSS** : mise en page de la coque mobile, composants et apparence des écrans.
+- **À partir d’environ la ligne 423 — structure HTML** : code d’accès, parcours d’accueil, questions, offres, motivations, accueil, transactions, virements et profil.
+- **À partir d’environ la ligne 892 — JavaScript** : données de démonstration, état en mémoire et interactions.
 
 Les numéros de ligne sont indicatifs et peuvent changer avec les modifications. Repères JavaScript utiles :
 
@@ -86,10 +99,11 @@ Les numéros de ligne sont indicatifs et peuvent changer avec les modifications.
 Avant toute modification :
 
 1. Lire ce README, puis examiner le fichier [`bank-app/index.html`](bank-app/index.html) concerné par la demande ; toute l’application est regroupée dans ce fichier.
-2. Repérer l’écran avec son identifiant `screen-*`, les éléments DOM utilisés et les fonctions JavaScript associées. Les interactions HTML appellent actuellement les fonctions via des attributs `onclick`.
-3. Conserver le fonctionnement autonome : pas de framework, de dépendance ou de backend à introduire sans besoin explicite.
-4. Préserver la distinction entre **simulation** et **fonction bancaire réelle**. Ne pas présenter les exemples comme des données ou opérations financières réelles.
-5. Après un changement d’interface, vérifier le parcours concerné dans un navigateur, notamment les étapes d’accueil, la personnalisation, la navigation et la remise à zéro si elles sont affectées. Il n’existe pas de tests automatisés dans le dépôt.
-6. Mettre à jour ce README lorsqu’une modification change les fonctionnalités, les commandes de démarrage, l’architecture ou les limites du prototype.
+2. Pour une modification du chargement ou de l’intégration Streamlit, examiner [`app.py`](app.py) et conserver le chemin du fichier HTML ainsi que l’encodage UTF-8.
+3. Repérer l’écran avec son identifiant `screen-*`, les éléments DOM utilisés et les fonctions JavaScript associées. Les interactions HTML appellent actuellement les fonctions via des attributs `onclick`.
+4. Conserver l’architecture légère : HTML/CSS/JavaScript pour l’interface et Streamlit comme conteneur de déploiement. Ajouter des dépendances uniquement si nécessaire, et mettre à jour `requirements.txt`.
+5. Préserver la distinction entre **simulation** et **fonction bancaire réelle**. Ne pas présenter les exemples comme des données ou opérations financières réelles.
+6. Après un changement, lancer l’application avec `python -m streamlit run app.py` et vérifier le parcours concerné dans un navigateur, notamment les étapes d’accueil, la personnalisation, la navigation et la remise à zéro si elles sont affectées. Il n’existe pas de tests automatisés dans le dépôt.
+7. Mettre à jour ce README lorsqu’une modification change les fonctionnalités, les commandes de démarrage, l’architecture ou les limites du prototype.
 
 Pour ajouter une fonctionnalité, vérifier ses dépendances avec l’état `S`, ses règles d’affichage dans `applyPersonalization` et les transitions d’écran via `navigate`. Éviter de supposer qu’une carte, un bouton ou une donnée illustrative est déjà relié à un service.
