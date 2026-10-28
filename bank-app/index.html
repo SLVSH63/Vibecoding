@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>NOVA Bank</title>
+<style>
+/* ── Reset ───────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:#07070f;font-family:'Segoe UI',system-ui,sans-serif;
+}
+
+/* ── Phone Shell ─────────────────────────── */
+.phone{
+  width:390px;height:844px;
+  background:#0e0e1c;border-radius:52px;
+  border:3px solid #21213a;
+  box-shadow:0 0 0 6px #09090f,0 0 0 8px #181830,0 40px 120px rgba(99,60,255,.35),inset 0 0 0 2px rgba(255,255,255,.04);
+  position:relative;overflow:hidden;display:flex;flex-direction:column;
+}
+.phone::before{
+  content:'';position:absolute;top:14px;left:50%;transform:translateX(-50%);
+  width:100px;height:28px;background:#07070f;border-radius:20px;z-index:200;
+}
+
+/* ── Status Bar ──────────────────────────── */
+.status-bar{
+  height:50px;padding:18px 24px 0;display:flex;justify-content:space-between;align-items:center;
+  color:rgba(255,255,255,.6);font-size:12px;font-weight:600;flex-shrink:0;z-index:100;
+}
+.status-time{font-size:13px;color:#fff;}
+.status-icons{display:flex;gap:6px;align-items:center;}
+.status-icons svg{width:14px;height:14px;fill:rgba(255,255,255,.8);}
+
+/* ── Screens ─────────────────────────────── */
+.screen{flex:1;overflow:hidden;display:none;flex-direction:column;position:relative;}
+.screen.active{display:flex;}
+.scroll-content{flex:1;overflow-y:auto;scrollbar-width:none;}
+.scroll-content::-webkit-scrollbar{display:none;}
+
+/* ── Bottom Nav ──────────────────────────── */
+.bottom-nav{
+  height:80px;background:rgba(14,14,28,.95);border-top:1px solid rgba(255,255,255,.06);
+  display:flex;align-items:center;justify-content:space-around;padding:0 12px 12px;
+  flex-shrink:0;backdrop-filter:blur(20px);
+}
+.nav-btn{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  background:none;border:none;cursor:pointer;padding:8px 16px;border-radius:16px;
+  transition:all .2s;color:rgba(255,255,255,.35);
+}
+.nav-btn.active{color:#8b5cf6;background:rgba(139,92,246,.12);}
+.nav-btn svg{width:22px;height:22px;}
+.nav-btn span{font-size:10px;font-weight:600;}
+
+/* ══════════════════════════════════════════
+   OB-0 : PERSONA SELECTION
+══════════════════════════════════════════ */
+#screen-ob0{background:linear-gradient(170deg,#0e0e1c 0%,#1a0d2e 60%,#0d1a2e 100%);overflow-y:auto;}
+.ob0-inner{padding:16px 20px 24px;display:flex;flex-direction:column;min-height:100%;}
+.ob0-header{text-align:center;margin-bottom:20px;}
+.nova-logo{
+  width:52px;height:52px;background:linear-gradient(135deg,#7c3aed,#2563eb);
+  border-radius:16px;display:flex;align-items:center;justify-content:center;
+  font-size:22px;margin:0 auto 12px;box-shadow:0 0 30px rgba(124,58,237,.5);
+}
+.ob0-greeting{font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,.35);text-transform:uppercase;margin-bottom:6px;}
+.ob0-title{font-size:20px;font-weight:900;color:#fff;line-height:1.3;}
+.ob0-sub{font-size:12px;color:rgba(255,255,255,.4);margin-top:4px;}
+
+/* Persona grid */
+.persona-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  margin-bottom:14px;
+}
+.persona-card{
+  border-radius:20px;border:1.5px solid rgba(255,255,255,.07);
+  cursor:pointer;overflow:hidden;transition:all .25s;position:relative;
+  display:flex;flex-direction:column;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+}
+.persona-card *{pointer-events:none;}
+.persona-card:hover{border-color:rgba(124,58,237,.4);transform:translateY(-2px);}
+.persona-card.selected{border-color:#7c3aed;box-shadow:0 0 0 2px rgba(124,58,237,.4);}
+
+/* Persona visual */
+.persona-visual{
+  height:86px;position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+}
+.persona-visual-emoji{font-size:42px;position:relative;z-index:2;}
+.persona-deco{
+  position:absolute;inset:0;opacity:.18;pointer-events:none;
+}
+.persona-deco circle{fill:rgba(255,255,255,.3);}
+.persona-body{padding:10px 12px 12px;}
+.persona-name{font-size:12px;font-weight:800;color:#fff;margin-bottom:3px;}
+.persona-desc{font-size:10px;color:rgba(255,255,255,.45);line-height:1.4;}
+.persona-tag{
+  display:inline-block;margin-top:6px;padding:2px 8px;border-radius:8px;
+  font-size:9px;font-weight:800;letter-spacing:.5px;
+}
+
+/* Wide card removed */
+
+.persona-check{
+  position:absolute;top:8px;right:8px;
+  width:22px;height:22px;border-radius:50%;
+  background:#7c3aed;display:none;align-items:center;justify-content:center;
+  font-size:12px;color:#fff;z-index:10;
+}
+.persona-card.selected .persona-check{display:flex;}
+
+.ob0-btn{
+  margin-top:auto;padding:15px;width:100%;
+  background:linear-gradient(135deg,#7c3aed,#2563eb);border:none;border-radius:18px;
+  color:#fff;font-size:15px;font-weight:800;cursor:pointer;transition:all .2s;
+  box-shadow:0 8px 24px rgba(124,58,237,.4);flex-shrink:0;
+}
+.ob0-btn:disabled{opacity:.3;cursor:not-allowed;box-shadow:none;}
+.ob0-btn:not(:disabled):hover{transform:translateY(-2px);}
+
+/* ══════════════════════════════════════════
+   OB-1 : QUESTIONS (step 1/3)
+══════════════════════════════════════════ */
+#screen-ob1{background:linear-gradient(170deg,#0e0e1c 0%,#1a0d2e 60%,#0d1a2e 100%);}
+.ob-wrap{padding:16px 24px 24px;display:flex;flex-direction:column;height:100%;}
+.ob-step-row{display:flex;align-items:center;gap:10px;margin-bottom:20px;}
+.ob-step-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:1px;}
+.step-track{flex:1;height:3px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;}
+.step-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#7c3aed,#2563eb);transition:width .4s ease;}
+
+.ob-heading{margin-bottom:24px;}
+.ob-heading-title{font-size:22px;font-weight:900;color:#fff;margin-bottom:4px;}
+.ob-heading-sub{font-size:13px;color:rgba(255,255,255,.4);}
+
+.qblock{margin-bottom:20px;}
+.qblock-label{font-size:10px;font-weight:800;color:#7c3aed;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;}
+.qblock-q{font-size:15px;font-weight:700;color:#fff;margin-bottom:12px;line-height:1.4;}
+.q-opts{display:flex;gap:8px;}
+.q-opt{
+  flex:1;padding:13px;border-radius:14px;border:1.5px solid rgba(255,255,255,.09);
+  background:rgba(255,255,255,.03);color:rgba(255,255,255,.6);
+  font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;
+}
+.q-opt:hover{border-color:rgba(124,58,237,.4);color:#fff;}
+.q-opt.sel{background:linear-gradient(135deg,#7c3aed,#2563eb);border-color:transparent;color:#fff;}
+
+.ob-spacer{flex:1;}
+.ob-cta{
+  padding:16px;width:100%;
+  background:linear-gradient(135deg,#7c3aed,#2563eb);border:none;border-radius:18px;
+  color:#fff;font-size:16px;font-weight:800;cursor:pointer;transition:all .2s;
+  box-shadow:0 8px 24px rgba(124,58,237,.4);
+}
+.ob-cta:disabled{opacity:.3;cursor:not-allowed;}
+.ob-cta:not(:disabled):hover{transform:translateY(-2px);}
+
+/* ══════════════════════════════════════════
+   OB-2 : OFFER POINTS (step 2/3)
+══════════════════════════════════════════ */
+#screen-ob2{background:#0e0e1c;}
+.ob2-header{padding:16px 24px 0;display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-shrink:0;}
+.ob2-title{font-size:20px;font-weight:900;color:#fff;}
+
+.points-tracker{
+  margin:0 24px 14px;padding:14px 18px;
+  background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.25);
+  border-radius:16px;display:flex;align-items:center;gap:14px;flex-shrink:0;
+}
+.pts-left-label{font-size:11px;color:rgba(255,255,255,.45);font-weight:600;}
+.pts-left-val{font-size:26px;font-weight:900;color:#a78bfa;line-height:1;}
+.pts-bar-wrap{flex:1;height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;}
+.pts-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#7c3aed,#06b6d4);transition:width .3s;}
+
+.offers-list{padding:0 20px;display:flex;flex-direction:column;gap:10px;padding-bottom:16px;}
+.offer-card{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+  border-radius:18px;padding:14px 16px;display:flex;align-items:center;gap:12px;
+  transition:border-color .2s;
+}
+.offer-card.has-points{border-color:rgba(124,58,237,.35);background:rgba(124,58,237,.06);}
+.offer-icon{font-size:26px;width:40px;text-align:center;flex-shrink:0;}
+.offer-info{flex:1;min-width:0;}
+.offer-name{font-size:13px;font-weight:800;color:#fff;margin-bottom:2px;}
+.offer-desc{font-size:10px;color:rgba(255,255,255,.38);line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.offer-ctrl{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.ctrl-btn{
+  width:28px;height:28px;border-radius:9px;border:none;cursor:pointer;
+  font-size:16px;font-weight:900;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.ctrl-minus{background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);}
+.ctrl-minus:hover{background:rgba(239,68,68,.15);color:#f87171;}
+.ctrl-plus{background:rgba(124,58,237,.2);color:#a78bfa;}
+.ctrl-plus:hover{background:rgba(124,58,237,.35);color:#fff;}
+.ctrl-val{min-width:18px;text-align:center;font-size:15px;font-weight:900;color:#fff;}
+
+/* ══════════════════════════════════════════
+   OB-3 : WHY (step 3/3)
+══════════════════════════════════════════ */
+#screen-ob3{background:linear-gradient(170deg,#0e0e1c 0%,#1a0d2e 60%,#0d1a2e 100%);}
+.ob3-wrap{padding:16px 24px 24px;display:flex;flex-direction:column;flex:1;min-height:0;overflow-y:auto;}
+
+.why-summary{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+  border-radius:18px;padding:14px 16px;margin-bottom:20px;
+}
+.why-summary-title{font-size:11px;font-weight:800;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+.why-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.chosen-chip{
+  padding:4px 12px;border-radius:20px;
+  background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3);
+  font-size:11px;font-weight:700;color:#a78bfa;display:flex;align-items:center;gap:5px;
+}
+.chosen-chip .chip-pts{
+  background:rgba(124,58,237,.35);border-radius:10px;padding:1px 6px;
+  font-size:10px;color:#c4b5fd;
+}
+
+.why-reasons-title{font-size:13px;font-weight:800;color:#fff;margin-bottom:10px;}
+.reason-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;}
+.reason-chip{
+  padding:10px 14px;border-radius:14px;
+  border:1.5px solid rgba(255,255,255,.09);background:rgba(255,255,255,.03);
+  color:rgba(255,255,255,.55);font-size:12px;font-weight:600;cursor:pointer;
+  transition:all .2s;
+}
+.reason-chip.sel{background:rgba(124,58,237,.15);border-color:rgba(124,58,237,.4);color:#c4b5fd;}
+
+.why-text-label{font-size:12px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:8px;}
+.why-textarea{
+  width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);
+  border-radius:14px;padding:12px 14px;color:#fff;font-size:13px;resize:none;
+  font-family:inherit;outline:none;transition:border-color .2s;
+}
+.why-textarea:focus{border-color:rgba(124,58,237,.4);}
+.why-textarea::placeholder{color:rgba(255,255,255,.25);}
+
+/* ══════════════════════════════════════════
+   HOME SCREEN
+══════════════════════════════════════════ */
+#screen-home{background:#0e0e1c;}
+.home-header{padding:16px 24px 0;display:flex;justify-content:space-between;align-items:center;}
+.greeting{color:rgba(255,255,255,.5);font-size:12px;}
+.user-name{color:#fff;font-size:17px;font-weight:800;}
+.avatar{
+  width:38px;height:38px;border-radius:13px;
+  background:linear-gradient(135deg,#7c3aed,#db2777);
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:800;color:#fff;cursor:pointer;
+}
+
+.balance-hero{
+  margin:16px 20px;background:linear-gradient(135deg,#1e1040 0%,#0f172a 60%,#1e3a5f 100%);
+  border-radius:26px;padding:24px 22px;border:1px solid rgba(255,255,255,.07);
+  position:relative;overflow:hidden;
+}
+.balance-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(124,58,237,.25),transparent 70%);}
+.balance-hero::after{content:'';position:absolute;bottom:-30px;left:20px;width:120px;height:120px;background:radial-gradient(circle,rgba(37,99,235,.2),transparent 70%);}
+.balance-label{font-size:11px;color:rgba(255,255,255,.4);font-weight:600;letter-spacing:1px;text-transform:uppercase;}
+.balance-amount{font-size:38px;font-weight:900;color:#fff;margin:6px 0 3px;letter-spacing:-1px;}
+.balance-amount span{font-size:22px;font-weight:500;color:rgba(255,255,255,.55);}
+.balance-change{font-size:11px;color:#34d399;font-weight:600;}
+.tier-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.11);
+  border-radius:20px;padding:5px 12px;margin-top:14px;
+  font-size:10px;font-weight:700;color:rgba(255,255,255,.75);text-transform:uppercase;letter-spacing:.8px;
+}
+.tier-badge.premium{border-color:rgba(251,191,36,.4);color:#fbbf24;background:rgba(251,191,36,.08);}
+.tier-dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
+.persona-mini{
+  display:inline-flex;align-items:center;gap:6px;margin-top:8px;
+  font-size:10px;color:rgba(255,255,255,.35);font-weight:600;
+}
+
+.section-title{font-size:12px;font-weight:700;color:rgba(255,255,255,.4);padding:0 20px;margin-bottom:12px;letter-spacing:.5px;text-transform:uppercase;}
+
+.quick-actions{display:flex;justify-content:space-around;padding:0 14px;margin-bottom:24px;}
+.qa-btn{display:flex;flex-direction:column;align-items:center;gap:7px;background:none;border:none;cursor:pointer;}
+.qa-icon{width:50px;height:50px;border-radius:17px;display:flex;align-items:center;justify-content:center;font-size:19px;}
+.qa-icon.blue{background:rgba(37,99,235,.15);}
+.qa-icon.purple{background:rgba(124,58,237,.15);}
+.qa-icon.green{background:rgba(16,185,129,.15);}
+.qa-icon.orange{background:rgba(245,158,11,.15);}
+.qa-label{font-size:10px;font-weight:600;color:rgba(255,255,255,.5);}
+
+.cards-carousel{display:flex;gap:12px;padding:0 20px;overflow-x:auto;scrollbar-width:none;margin-bottom:24px;}
+.cards-carousel::-webkit-scrollbar{display:none;}
+.bank-card{flex-shrink:0;width:230px;height:140px;border-radius:20px;padding:18px;position:relative;overflow:hidden;cursor:pointer;}
+.bank-card.card-main{background:linear-gradient(135deg,#7c3aed,#2563eb);}
+.bank-card.card-black{background:linear-gradient(135deg,#1c1c2e,#2d2d4e);border:1px solid rgba(255,255,255,.08);}
+.bank-card::before{content:'';position:absolute;top:-20px;right:-20px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.07);}
+.card-chip{width:26px;height:18px;background:rgba(255,215,0,.7);border-radius:3px;margin-bottom:12px;}
+.card-number{font-size:11px;color:rgba(255,255,255,.55);letter-spacing:2px;margin-bottom:10px;}
+.card-bottom{display:flex;justify-content:space-between;align-items:flex-end;}
+.card-name{font-size:12px;font-weight:700;color:rgba(255,255,255,.85);}
+.card-balance{font-size:14px;font-weight:800;color:#fff;}
+.card-type{font-size:9px;color:rgba(255,255,255,.4);}
+.card-logo{font-size:20px;position:absolute;top:16px;right:16px;}
+
+.points-banner{
+  margin:0 20px 22px;background:linear-gradient(135deg,rgba(251,191,36,.1),rgba(245,158,11,.05));
+  border:1px solid rgba(251,191,36,.2);border-radius:18px;padding:16px 18px;
+  display:flex;align-items:center;gap:12px;
+}
+.points-icon{font-size:26px;}
+.points-info{flex:1;}
+.points-label{font-size:10px;color:rgba(255,255,255,.45);font-weight:600;margin-bottom:2px;}
+.points-value{font-size:19px;font-weight:900;color:#fbbf24;}
+.points-cta{background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);border-radius:11px;padding:7px 13px;color:#fbbf24;font-size:11px;font-weight:700;cursor:pointer;}
+.multiplier-badge{display:inline-block;background:linear-gradient(135deg,#f59e0b,#ef4444);border-radius:7px;padding:1px 7px;font-size:9px;font-weight:800;color:#fff;margin-left:5px;}
+
+.tx-item{display:flex;align-items:center;gap:12px;padding:12px 20px;cursor:pointer;transition:background .15s;}
+.tx-item:hover{background:rgba(255,255,255,.03);}
+.tx-icon{width:42px;height:42px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+.tx-info{flex:1;}
+.tx-name{font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;}
+.tx-date{font-size:11px;color:rgba(255,255,255,.38);}
+.tx-amount{font-size:14px;font-weight:800;}
+.tx-amount.debit{color:#f87171;}
+.tx-amount.credit{color:#34d399;}
+
+/* TRANSACTIONS */
+#screen-transactions{background:#0e0e1c;}
+.screen-header{padding:14px 24px 18px;display:flex;align-items:center;justify-content:space-between;}
+.screen-title{font-size:21px;font-weight:900;color:#fff;}
+.header-action{width:34px;height:34px;border-radius:11px;background:rgba(255,255,255,.06);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,.6);font-size:15px;}
+.filter-pills{display:flex;gap:7px;padding:0 20px 18px;overflow-x:auto;scrollbar-width:none;}
+.filter-pills::-webkit-scrollbar{display:none;}
+.pill{flex-shrink:0;padding:7px 15px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid rgba(255,255,255,.09);background:transparent;color:rgba(255,255,255,.45);transition:all .2s;}
+.pill.active{background:#7c3aed;border-color:#7c3aed;color:#fff;}
+.tx-month{padding:7px 20px 3px;font-size:10px;font-weight:800;color:rgba(255,255,255,.28);text-transform:uppercase;letter-spacing:1.5px;}
+.tx-card-item{display:flex;align-items:center;gap:12px;padding:13px 20px;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;transition:background .15s;}
+.tx-card-item:hover{background:rgba(255,255,255,.03);}
+.tx-pts{font-size:10px;color:#fbbf24;font-weight:700;margin-top:2px;}
+
+/* TRANSFER */
+#screen-transfer{background:#0e0e1c;}
+.contacts-row{display:flex;gap:14px;padding:0 20px 22px;overflow-x:auto;scrollbar-width:none;}
+.contacts-row::-webkit-scrollbar{display:none;}
+.contact-item{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;flex-shrink:0;}
+.contact-avatar{width:48px;height:48px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;}
+.contact-name{font-size:10px;color:rgba(255,255,255,.45);font-weight:600;}
+.contact-add{width:48px;height:48px;border-radius:16px;background:rgba(255,255,255,.04);border:1.5px dashed rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-size:20px;color:rgba(255,255,255,.25);cursor:pointer;}
+.transfer-inner{padding:0 20px;}
+.recipient-selector{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:14px 18px;display:flex;align-items:center;gap:12px;margin-bottom:18px;cursor:pointer;transition:border-color .2s;}
+.recipient-selector:hover{border-color:rgba(124,58,237,.4);}
+.rec-avatar{width:38px;height:38px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;}
+.rec-info{flex:1;}
+.rec-name{font-size:14px;font-weight:700;color:#fff;}
+.rec-iban{font-size:11px;color:rgba(255,255,255,.32);}
+.rec-arrow{color:rgba(255,255,255,.28);font-size:17px;}
+.amount-display{text-align:center;padding:22px 20px;}
+.amount-label{font-size:11px;color:rgba(255,255,255,.38);font-weight:600;margin-bottom:10px;text-transform:uppercase;}
+.amount-value{font-size:52px;font-weight:900;color:#fff;letter-spacing:-2px;margin-bottom:6px;}
+.amount-value .cursor{display:inline-block;width:3px;height:44px;background:#7c3aed;border-radius:2px;margin-left:4px;animation:blink 1s step-end infinite;vertical-align:middle;}
+@keyframes blink{50%{opacity:0;}}
+.amount-balance-hint{font-size:12px;color:rgba(255,255,255,.28);}
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding:0 10px;}
+.num-key{padding:17px;text-align:center;font-size:21px;font-weight:700;color:#fff;background:none;border:none;border-radius:14px;cursor:pointer;transition:background .15s;}
+.num-key:hover{background:rgba(255,255,255,.06);}
+.transfer-btn{margin:16px 20px;width:calc(100% - 40px);padding:17px;background:linear-gradient(135deg,#7c3aed,#2563eb);border:none;border-radius:18px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;transition:all .2s;box-shadow:0 8px 24px rgba(124,58,237,.4);}
+.transfer-btn:hover{transform:translateY(-2px);}
+.success-overlay{position:absolute;inset:0;background:rgba(10,10,20,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:500;opacity:0;pointer-events:none;transition:opacity .3s;}
+.success-overlay.show{opacity:1;pointer-events:all;}
+.success-circle{width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,#059669,#34d399);display:flex;align-items:center;justify-content:center;font-size:38px;margin-bottom:18px;animation:scaleIn .4s cubic-bezier(.175,.885,.32,1.275);}
+@keyframes scaleIn{from{transform:scale(0);}to{transform:scale(1);}}
+.success-title{font-size:22px;font-weight:900;color:#fff;margin-bottom:7px;}
+.success-sub{font-size:13px;color:rgba(255,255,255,.38);margin-bottom:30px;}
+.success-back{padding:14px 38px;background:rgba(255,255,255,.08);border:none;border-radius:16px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;}
+
+/* PROFILE */
+#screen-profile{background:#0e0e1c;}
+.profile-hero{padding:18px 20px 24px;display:flex;flex-direction:column;align-items:center;}
+.profile-avatar-big{width:76px;height:76px;border-radius:24px;background:linear-gradient(135deg,#7c3aed,#db2777);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#fff;box-shadow:0 8px 24px rgba(124,58,237,.4);margin-bottom:12px;}
+.profile-name{font-size:20px;font-weight:900;color:#fff;margin-bottom:3px;}
+.profile-email{font-size:12px;color:rgba(255,255,255,.38);margin-bottom:12px;}
+.profile-persona-badge{display:flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:20px;font-size:11px;color:rgba(255,255,255,.6);font-weight:600;margin-bottom:6px;}
+.stats-row{display:flex;gap:12px;width:100%;padding:0 20px;margin-bottom:24px;}
+.stat-card{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:14px;text-align:center;}
+.stat-value{font-size:18px;font-weight:900;color:#fff;margin-bottom:3px;}
+.stat-label{font-size:10px;color:rgba(255,255,255,.38);font-weight:600;}
+.menu-section{padding:0 20px;margin-bottom:22px;}
+.menu-section-title{font-size:10px;font-weight:800;color:rgba(255,255,255,.28);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:9px;}
+.menu-item{display:flex;align-items:center;gap:12px;padding:14px;border-radius:16px;cursor:pointer;transition:background .15s;margin-bottom:3px;}
+.menu-item:hover{background:rgba(255,255,255,.04);}
+.menu-icon{width:38px;height:38px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:17px;}
+.menu-text{flex:1;}
+.menu-title{font-size:14px;font-weight:700;color:#fff;}
+.menu-sub{font-size:11px;color:rgba(255,255,255,.32);margin-top:1px;}
+.menu-arrow{color:rgba(255,255,255,.22);font-size:15px;}
+.divider{height:1px;background:rgba(255,255,255,.05);margin:0 20px 18px;}
+.logout-btn{margin:0 20px 14px;width:calc(100% - 40px);padding:15px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.18);border-radius:16px;color:#f87171;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;}
+.logout-btn:hover{background:rgba(239,68,68,.15);}
+
+/* Toast */
+.toast{position:absolute;bottom:92px;left:20px;right:20px;background:#1e1040;border:1px solid rgba(124,58,237,.4);border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:11px;opacity:0;transform:translateY(20px);transition:all .3s;z-index:999;pointer-events:none;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast-text{font-size:12px;font-weight:700;color:#fff;}
+
+/* Animations */
+@keyframes fadeInUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+.screen.active>*{animation:fadeInUp .32s ease;}
+
+/* Nav svg icons */
+.nav-icon-home path,.nav-icon-tx path,.nav-icon-send path,.nav-icon-user path{fill:currentColor;}
+</style>
+</head>
+<body>
+<div class="phone">
+
+<!-- Status Bar -->
+<div class="status-bar">
+  <span class="status-time">14:56</span>
+  <div class="status-icons">
+    <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3a4.237 4.237 0 00-6 0zm-4-4l2 2a7.074 7.074 0 0110 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+    <svg viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SCREEN OB-0 : PERSONA SELECTION
+═══════════════════════════════════════════════ -->
+<div class="screen active" id="screen-ob0">
+<div class="ob0-inner">
+  <div class="ob0-header">
+    <div class="nova-logo">✦</div>
+    <div class="ob0-greeting">NOVA Bank · Bienvenue</div>
+    <div class="ob0-title">Bonjour, dites-nous<br>en plus sur vous.</div>
+    <div class="ob0-sub">Sélectionnez le profil qui vous ressemble le plus</div>
+  </div>
+
+  <div class="persona-grid" id="persona-grid">
+
+    <!-- P1 Étudiant économe -->
+    <div class="persona-card" data-persona="etudiant" onclick="selectPersona(this)">
+      <div class="persona-check">✓</div>
+      <div class="persona-visual" style="background:linear-gradient(135deg,#1e3a5f,#0f2540)">
+        <svg class="persona-deco" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+          <circle cx="170" cy="20" r="50"/><circle cx="30" cy="100" r="35"/>
+        </svg>
+        <div class="persona-visual-emoji">🎓</div>
+      </div>
+      <div class="persona-body">
+        <div class="persona-name">Étudiant économe</div>
+        <div class="persona-desc">Budget serré, cherche des avantages simples et immédiats, sans engagement.</div>
+        <span class="persona-tag" style="background:rgba(37,99,235,.15);color:#60a5fa">Gratuit · Voyage peu</span>
+      </div>
+    </div>
+
+    <!-- P2 Grand voyageur -->
+    <div class="persona-card" data-persona="voyageur" onclick="selectPersona(this)">
+      <div class="persona-check">✓</div>
+      <div class="persona-visual" style="background:linear-gradient(135deg,#3b1e6e,#1a0d40)">
+        <svg class="persona-deco" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+          <circle cx="160" cy="30" r="45"/><circle cx="40" cy="90" r="30"/>
+        </svg>
+        <div class="persona-visual-emoji">✈️</div>
+      </div>
+      <div class="persona-body">
+        <div class="persona-name">Grand voyageur</div>
+        <div class="persona-desc">Voyage très souvent, valorise les miles et réductions hôtel.</div>
+        <span class="persona-tag" style="background:rgba(124,58,237,.15);color:#a78bfa">Premium · Voyage ++</span>
+      </div>
+    </div>
+
+    <!-- P3 Abonné fidèle -->
+    <div class="persona-card" data-persona="fidele" onclick="selectPersona(this)">
+      <div class="persona-check">✓</div>
+      <div class="persona-visual" style="background:linear-gradient(135deg,#1a3020,#0d1f14)">
+        <svg class="persona-deco" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+          <circle cx="150" cy="25" r="55"/><circle cx="50" cy="95" r="32"/>
+        </svg>
+        <div class="persona-visual-emoji">☕</div>
+      </div>
+      <div class="persona-body">
+        <div class="persona-name">Abonné fidèle</div>
+        <div class="persona-desc">Voyage peu, consomme régulièrement. Apprécie les avantages complémentaires.</div>
+        <span class="persona-tag" style="background:rgba(16,185,129,.15);color:#34d399">Gratuit · Conso ++</span>
+      </div>
+    </div>
+
+    <!-- P4 Professionnel premium -->
+    <div class="persona-card" data-persona="pro" onclick="selectPersona(this)">
+      <div class="persona-check">✓</div>
+      <div class="persona-visual" style="background:linear-gradient(135deg,#2d1a00,#1a1000)">
+        <svg class="persona-deco" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+          <circle cx="165" cy="15" r="48"/><circle cx="35" cy="98" r="38"/>
+        </svg>
+        <div class="persona-visual-emoji">💼</div>
+      </div>
+      <div class="persona-body">
+        <div class="persona-name">Pro premium</div>
+        <div class="persona-desc">Voyage pro & loisirs. Veut optimiser ses points — gain concret et mesurable.</div>
+        <span class="persona-tag" style="background:rgba(245,158,11,.15);color:#fbbf24">Premium · ROI focus</span>
+      </div>
+    </div>
+
+
+  </div><!-- /persona-grid -->
+
+  <button class="ob0-btn" id="ob0-next" onclick="goOb1()" disabled>Continuer →</button>
+</div>
+</div><!-- /screen-ob0 -->
+
+<!-- ═══════════════════════════════════════════════
+     SCREEN OB-1 : QUESTIONS (étape 1/3)
+═══════════════════════════════════════════════ -->
+<div class="screen" id="screen-ob1">
+<div class="ob-wrap">
+
+  <div class="ob-step-row">
+    <span class="ob-step-label">Étape 1 sur 3</span>
+    <div class="step-track"><div class="step-fill" style="width:33%"></div></div>
+  </div>
+
+  <div class="ob-heading">
+    <div class="ob-heading-title">Vos abonnements</div>
+    <div class="ob-heading-sub">Ces informations nous permettent de personnaliser vos offres.</div>
+  </div>
+
+  <!-- Q1 -->
+  <div class="qblock">
+    <div class="qblock-label">Question 1</div>
+    <div class="qblock-q">Avez-vous un abonnement Revolut Premium ?</div>
+    <div class="q-opts">
+      <button class="q-opt" id="q1y" onclick="pickQ(1,'yes')">👑 Oui</button>
+      <button class="q-opt" id="q1n" onclick="pickQ(1,'no')">✕ Non</button>
+    </div>
+  </div>
+
+  <!-- Q2 -->
+  <div class="qblock">
+    <div class="qblock-label">Question 2</div>
+    <div class="qblock-q">Avez-vous une machine à café Nespresso ?</div>
+    <div class="q-opts">
+      <button class="q-opt" id="q2y" onclick="pickQ(2,'yes')">☕ Oui</button>
+      <button class="q-opt" id="q2n" onclick="pickQ(2,'no')">✕ Non</button>
+    </div>
+  </div>
+
+  <div class="ob-spacer"></div>
+  <button class="ob-cta" id="ob1-next" onclick="goOb2()" disabled>Continuer →</button>
+</div>
+</div><!-- /screen-ob1 -->
+
+<!-- ═══════════════════════════════════════════════
+     SCREEN OB-2 : ALLOCATE 10 POINTS (étape 2/3)
+═══════════════════════════════════════════════ -->
+<div class="screen" id="screen-ob2">
+  <div class="ob2-header">
+    <div style="flex:1">
+      <div class="ob-step-row" style="margin-bottom:4px">
+        <span class="ob-step-label">Étape 2 sur 3</span>
+        <div class="step-track"><div class="step-fill" style="width:66%"></div></div>
+      </div>
+      <div class="ob2-title">Vos offres préférées</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.38);margin-top:2px;">Répartissez vos 10 points sur les offres qui vous intéressent.</div>
+    </div>
+  </div>
+
+  <div class="points-tracker">
+    <div>
+      <div class="pts-left-label">Points restants</div>
+      <div class="pts-left-val" id="pts-remaining">10</div>
+    </div>
+    <div class="pts-bar-wrap">
+      <div class="pts-bar-fill" id="pts-bar" style="width:100%"></div>
+    </div>
+    <div style="font-size:22px;font-weight:900;color:rgba(255,255,255,.2)">/ 10</div>
+  </div>
+
+  <div class="scroll-content">
+  <div class="offers-list" id="offers-list">
+    <!-- offers injected by JS -->
+  </div>
+  </div>
+
+  <button class="ob-cta" id="ob2-next" onclick="goOb3()" style="margin:12px 20px;width:calc(100% - 40px);">Continuer →</button>
+</div><!-- /screen-ob2 -->
+
+<!-- ═══════════════════════════════════════════════
+     SCREEN OB-3 : WHY (étape 3/3)
+═══════════════════════════════════════════════ -->
+<div class="screen" id="screen-ob3">
+<div class="ob3-wrap">
+  <div class="ob-step-row">
+    <span class="ob-step-label">Étape 3 sur 3</span>
+    <div class="step-track"><div class="step-fill" style="width:100%"></div></div>
+  </div>
+  <div class="ob-heading" style="margin-bottom:16px">
+    <div class="ob-heading-title">Pourquoi ces choix ?</div>
+    <div class="ob-heading-sub">Aidez-nous à mieux comprendre vos motivations.</div>
+  </div>
+
+  <!-- recap -->
+  <div class="why-summary">
+    <div class="why-summary-title">Vos offres sélectionnées</div>
+    <div class="why-chips" id="why-chosen-chips"><!-- JS --></div>
+  </div>
+
+  <div class="why-reasons-title">Vos raisons principales <span style="font-size:11px;color:rgba(255,255,255,.3);font-weight:400">(plusieurs possibles)</span></div>
+  <div class="reason-chips">
+    <div class="reason-chip" onclick="toggleReason(this)">💰 Économiser de l'argent</div>
+    <div class="reason-chip" onclick="toggleReason(this)">✈️ Financer mes voyages</div>
+    <div class="reason-chip" onclick="toggleReason(this)">☕ Offres café/quotidien</div>
+    <div class="reason-chip" onclick="toggleReason(this)">🎁 Récompenses concrètes</div>
+    <div class="reason-chip" onclick="toggleReason(this)">📊 Rentabilité mesurable</div>
+    <div class="reason-chip" onclick="toggleReason(this)">🧩 Diversifier mes avantages</div>
+    <div class="reason-chip" onclick="toggleReason(this)">🚀 Découvrir de nouvelles offres</div>
+    <div class="reason-chip" onclick="toggleReason(this)">🛡 Fidélité & habitude</div>
+  </div>
+
+  <div class="why-text-label">Autre chose à ajouter ? (optionnel)</div>
+  <textarea class="why-textarea" rows="3" placeholder="Décrivez vos attentes en quelques mots…" id="why-text"></textarea>
+
+  <div class="ob-spacer"></div>
+  <button class="ob-cta" onclick="finishOnboarding()" style="margin-top:14px">Accéder à NOVA →</button>
+</div>
+</div><!-- /screen-ob3 -->
+
+<!-- ═══════════════════════════════════════════════
+     HOME SCREEN
+═══════════════════════════════════════════════ -->
+<div class="screen" id="screen-home">
+<div class="scroll-content">
+  <div class="home-header">
+    <div>
+      <div class="greeting">Bonjour 👋</div>
+      <div class="user-name">Alex Dubois</div>
+    </div>
+    <div class="avatar" onclick="navigate('profile')">A</div>
+  </div>
+
+  <div class="balance-hero" style="margin:14px 20px">
+    <div class="balance-label">Solde total</div>
+    <div class="balance-amount"><span>€</span> 12 487<span>,50</span></div>
+    <div class="balance-change">▲ +2,4% ce mois</div>
+    <div class="tier-badge" id="tier-badge"><span class="tier-dot"></span><span id="tier-text">Explorer</span></div>
+    <div class="persona-mini" id="persona-mini">🎓 Étudiant économe</div>
+  </div>
+
+  <div class="section-title">Actions rapides</div>
+  <div class="quick-actions">
+    <button class="qa-btn" onclick="navigate('transfer')"><div class="qa-icon blue">↗</div><span class="qa-label">Virement</span></button>
+    <button class="qa-btn" onclick="showToast('💳','Recharge en cours…')"><div class="qa-icon purple">＋</div><span class="qa-label">Recharge</span></button>
+    <button class="qa-btn" onclick="showToast('📤','Demande envoyée')"><div class="qa-icon green">⇄</div><span class="qa-label">Demander</span></button>
+    <button class="qa-btn" onclick="showToast('📊','Analyse disponible bientôt')"><div class="qa-icon orange">◎</div><span class="qa-label">Analyser</span></button>
+  </div>
+
+  <div class="section-title">Mes cartes</div>
+  <div class="cards-carousel">
+    <div class="bank-card card-main">
+      <div class="card-logo">◎</div>
+      <div class="card-chip"></div>
+      <div class="card-number">•••• •••• •••• 4821</div>
+      <div class="card-bottom">
+        <div><div class="card-name">Alex Dubois</div><div class="card-type">Carte principale</div></div>
+        <div class="card-balance">€9 200</div>
+      </div>
+    </div>
+    <div class="bank-card card-black">
+      <div class="card-logo" style="color:rgba(255,255,255,.28)">◈</div>
+      <div class="card-chip" style="background:rgba(255,255,255,.14)"></div>
+      <div class="card-number">•••• •••• •••• 7744</div>
+      <div class="card-bottom">
+        <div><div class="card-name">Alex Dubois</div><div class="card-type">Épargne</div></div>
+        <div class="card-balance">€3 287</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Points banner -->
+  <div class="points-banner" id="points-banner" style="display:none">
+    <div class="points-icon">⭐</div>
+    <div class="points-info">
+      <div class="points-label">Mes NOVA Points <span class="multiplier-badge" id="mult-badge" style="display:none">×2</span></div>
+      <div class="points-value">3 420 pts</div>
+    </div>
+    <div class="points-cta">Échanger</div>
+  </div>
+
+  <!-- Nespresso offer -->
+  <div id="nespresso-offer" style="display:none;margin:0 20px 20px">
+    <div style="background:linear-gradient(135deg,rgba(139,90,43,.15),rgba(80,40,10,.1));border:1px solid rgba(139,90,43,.25);border-radius:18px;padding:14px 18px;display:flex;align-items:center;gap:12px;">
+      <span style="font-size:26px">☕</span>
+      <div style="flex:1">
+        <div style="font-size:10px;color:rgba(255,255,255,.45);font-weight:600;margin-bottom:2px">Offre partenaire</div>
+        <div style="font-size:13px;font-weight:800;color:#fff">Nespresso — 10% cashback</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.36);margin-top:1px">Sur toutes vos capsules ce mois-ci</div>
+      </div>
+      <div style="font-size:16px;color:rgba(255,255,255,.22)">›</div>
+    </div>
+  </div>
+
+  <!-- Offer highlights from choices -->
+  <div id="home-offer-highlights"></div>
+
+  <div class="section-title">Récents</div>
+  <div class="tx-item" onclick="navigate('transactions')">
+    <div class="tx-icon" style="background:rgba(239,68,68,.1)">🛒</div>
+    <div class="tx-info"><div class="tx-name">Monoprix</div><div class="tx-date">Auj. · Alimentation</div></div>
+    <div class="tx-amount debit">-€48,20</div>
+  </div>
+  <div class="tx-item" onclick="navigate('transactions')">
+    <div class="tx-icon" style="background:rgba(16,185,129,.1)">💸</div>
+    <div class="tx-info"><div class="tx-name">Virement reçu</div><div class="tx-date">Hier · Thomas M.</div></div>
+    <div class="tx-amount credit">+€320,00</div>
+  </div>
+  <div class="tx-item" onclick="navigate('transactions')">
+    <div class="tx-icon" style="background:rgba(99,102,241,.1)">🎵</div>
+    <div class="tx-info"><div class="tx-name">Spotify</div><div class="tx-date">25 Oct. · Abonnement</div></div>
+    <div class="tx-amount debit">-€9,99</div>
+  </div>
+  <div style="height:20px"></div>
+</div>
+
+<div class="bottom-nav" id="nav-home">
+  <button class="nav-btn active" onclick="navigate('home')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Accueil</span></button>
+  <button class="nav-btn" onclick="navigate('transactions')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg><span>Transactions</span></button>
+  <button class="nav-btn" onclick="navigate('transfer')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 18H6.83l2.58-2.59L8 14l-5 5 5 5 1.41-1.41L6.83 20H21v-2zM3 6h14.17l-2.58 2.59L16 10l5-5-5-5-1.41 1.41L17.17 4H3v2z"/></svg><span>Virement</span></button>
+  <button class="nav-btn" onclick="navigate('profile')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><span>Profil</span></button>
+</div>
+<div class="toast" id="toast-home"><span class="toast-text" id="toast-txt">✓ Action effectuée</span></div>
+</div><!-- /screen-home -->
+
+<!-- ═══════════════════════════════════════════════
+     TRANSACTIONS SCREEN
+═══════════════════════════════════════════════ -->
+<div class="screen" id="screen-transactions">
+  <div class="screen-header">
+    <div class="screen-title">Transactions</div>
+    <button class="header-action">⚙</button>
+  </div>
+  <div class="filter-pills">
+    <button class="pill active" onclick="setPill(this)">Tout</button>
+    <button class="pill" onclick="setPill(this)">Dépenses</button>
+    <button class="pill" onclick="setPill(this)">Revenus</button>
+    <button class="pill" onclick="setPill(this)">Virements</button>
+    <button class="pill" onclick="setPill(this)">Abonnements</button>
+  </div>
+  <div class="scroll-content">
+    <div class="tx-month">Octobre 2026</div>
+    <div class="tx-card-item"><div class="tx-icon" style="background:rgba(239,68,68,.1)">🛒</div><div class="tx-info"><div class="tx-name">Monoprix</div><div class="tx-date">28 Oct. · Alimentation</div><div class="tx-pts" id="txp1" style="display:none">+48 pts</div></div><div class="tx-amount debit">-€48,20</div></div>
+    <div class="tx-card-item"><div class="tx-icon" style="background:rgba(16,185,129,.1)">💸</div><div class="tx-info"><div class="tx-name">Virement Thomas M.</div><div class="tx-date">27 Oct. · Entrant</div><div class="tx-pts" id="txp2" style="display:none">+320 pts</div></div><div class="tx-amount credit">+€320,00</div></div>
+    <div class="tx-card-item"><div class="tx-icon" style="background:rgba(99,102,241,.1)">🎵</div><div class="tx-info"><div class="tx-name">Spotify</div><div class="tx-date">25 Oct. · Abonnement</div><div class="tx-pts" id="txp3" style="display:none">+10 pts</div></div><div class="tx-amount debit">-€9,99</div></div>
+    <div class="tx-card-item"><div class="tx-icon" style="background:rgba(245,158,11,.1)">☕</div><div class="tx-info"><div class="tx-name">Nespresso</div><div class="tx-date">23 Oct. · Shopping</div><div class="tx-pts" id="txp-nsp" style="display:none">+85 pts ×2</div></div><div class="tx-amount debit">-€42,50</div></div>
+    <div class="tx-card-item"><div class="tx-icon" style="background:rgba(16,185,129,.1)">🏢</div><div class="tx-info"><div class="tx-name">Salaire — TechCorp</div><div class="tx-date">20 Oct. · Revenu</div><div class="tx-pts" id="txp4" style="display:none">+3 200 pts</div></div><div class="tx-amount credit">+€3 200,00</div></div>
+    <div class="tx-card-item"><div class="tx-icon" style="background:rgba(239,68,68,.1)">🏠</div><div class="tx-info"><div class="tx-name">Loyer</div><div class="tx-date">18 Oct. · Logement</div></div><div class="tx-amount debit">-€850,00</div></div>
+    <div class="tx-card-item"><div class="tx-icon" style="background:rgba(124,58,237,.1)">🛍</div><div class="tx-info"><div class="tx-name">FNAC</div><div class="tx-date">15 Oct. · Shopping</div><div class="tx-pts" id="txp5" style="display:none">+130 pts</div></div><div class="tx-amount debit">-€129,90</div></div>
+    <div class="tx-month">Septembre 2026</div>
+    <div class="tx-card-item"><div class="tx-icon" style="background:rgba(16,185,129,.1)">🏢</div><div class="tx-info"><div class="tx-name">Salaire — TechCorp</div><div class="tx-date">20 Sep. · Revenu</div><div class="tx-pts" id="txp6" style="display:none">+3 200 pts</div></div><div class="tx-amount credit">+€3 200,00</div></div>
+    <div class="tx-card-item"><div class="tx-icon" style="background:rgba(239,68,68,.1)">✈️</div><div class="tx-info"><div class="tx-name">Air France</div><div class="tx-date">12 Sep. · Voyage</div><div class="tx-pts" id="txp7" style="display:none">+420 pts ×2</div></div><div class="tx-amount debit">-€420,00</div></div>
+    <div style="height:20px"></div>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-btn" onclick="navigate('home')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Accueil</span></button>
+    <button class="nav-btn active" onclick="navigate('transactions')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg><span>Transactions</span></button>
+    <button class="nav-btn" onclick="navigate('transfer')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 18H6.83l2.58-2.59L8 14l-5 5 5 5 1.41-1.41L6.83 20H21v-2zM3 6h14.17l-2.58 2.59L16 10l5-5-5-5-1.41 1.41L17.17 4H3v2z"/></svg><span>Virement</span></button>
+    <button class="nav-btn" onclick="navigate('profile')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><span>Profil</span></button>
+  </div>
+</div><!-- /screen-transactions -->
+
+<!-- ═══════════════════════════════════════════════
+     TRANSFER SCREEN
+═══════════════════════════════════════════════ -->
+<div class="screen" id="screen-transfer">
+  <div class="screen-header"><div class="screen-title">Virement</div><button class="header-action">⋯</button></div>
+  <div class="scroll-content">
+    <div class="section-title" style="margin-bottom:10px">Contacts récents</div>
+    <div class="contacts-row">
+      <div class="contact-item" onclick="selectContact('Thomas M.','FR76 3000 6000 0112','T','linear-gradient(135deg,#7c3aed,#4f46e5)')"><div class="contact-avatar" style="background:linear-gradient(135deg,#7c3aed,#4f46e5)">T</div><span class="contact-name">Thomas</span></div>
+      <div class="contact-item" onclick="selectContact('Sarah K.','FR76 1027 8022 0102','S','linear-gradient(135deg,#f59e0b,#ef4444)')"><div class="contact-avatar" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">S</div><span class="contact-name">Sarah</span></div>
+      <div class="contact-item" onclick="selectContact('Marie L.','FR76 2004 1010 0505','M','linear-gradient(135deg,#059669,#0891b2)')"><div class="contact-avatar" style="background:linear-gradient(135deg,#059669,#0891b2)">M</div><span class="contact-name">Marie</span></div>
+      <div class="contact-item" onclick="selectContact('Julien P.','FR76 4002 0000 0730','J','linear-gradient(135deg,#2563eb,#0891b2)')"><div class="contact-avatar" style="background:linear-gradient(135deg,#2563eb,#0891b2)">J</div><span class="contact-name">Julien</span></div>
+      <div class="contact-item"><div class="contact-add">＋</div><span class="contact-name">Nouveau</span></div>
+    </div>
+    <div class="transfer-inner">
+      <div class="recipient-selector">
+        <div class="rec-avatar" id="rec-av" style="background:linear-gradient(135deg,#7c3aed,#4f46e5)">T</div>
+        <div class="rec-info"><div class="rec-name" id="rec-nm">Thomas M.</div><div class="rec-iban" id="rec-ib">FR76 3000 6000 0112 ···</div></div>
+        <div class="rec-arrow">›</div>
+      </div>
+    </div>
+    <div class="amount-display">
+      <div class="amount-label">Montant à envoyer</div>
+      <div class="amount-value"><span id="amt">0</span>€<span class="cursor"></span></div>
+      <div class="amount-balance-hint">Solde dispo : €9 200,00</div>
+    </div>
+    <div class="numpad">
+      <button class="num-key" onclick="numIn('1')">1</button><button class="num-key" onclick="numIn('2')">2</button><button class="num-key" onclick="numIn('3')">3</button>
+      <button class="num-key" onclick="numIn('4')">4</button><button class="num-key" onclick="numIn('5')">5</button><button class="num-key" onclick="numIn('6')">6</button>
+      <button class="num-key" onclick="numIn('7')">7</button><button class="num-key" onclick="numIn('8')">8</button><button class="num-key" onclick="numIn('9')">9</button>
+      <button class="num-key" onclick="numIn('.')">·</button><button class="num-key" onclick="numIn('0')">0</button><button class="num-key" onclick="numDel()">⌫</button>
+    </div>
+  </div>
+  <button class="transfer-btn" onclick="doTransfer()">Envoyer →</button>
+  <div class="success-overlay" id="tr-success">
+    <div class="success-circle">✓</div>
+    <div class="success-title">Virement envoyé !</div>
+    <div class="success-sub" id="suc-txt">€0,00 envoyé avec succès</div>
+    <button class="success-back" onclick="closeSuccess()">Retour à l'accueil</button>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-btn" onclick="navigate('home')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Accueil</span></button>
+    <button class="nav-btn" onclick="navigate('transactions')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg><span>Transactions</span></button>
+    <button class="nav-btn active" onclick="navigate('transfer')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 18H6.83l2.58-2.59L8 14l-5 5 5 5 1.41-1.41L6.83 20H21v-2zM3 6h14.17l-2.58 2.59L16 10l5-5-5-5-1.41 1.41L17.17 4H3v2z"/></svg><span>Virement</span></button>
+    <button class="nav-btn" onclick="navigate('profile')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><span>Profil</span></button>
+  </div>
+</div><!-- /screen-transfer -->
+
+<!-- ═══════════════════════════════════════════════
+     PROFILE SCREEN
+═══════════════════════════════════════════════ -->
+<div class="screen" id="screen-profile">
+  <div class="screen-header"><div class="screen-title">Mon profil</div><button class="header-action">⚙</button></div>
+  <div class="scroll-content">
+    <div class="profile-hero">
+      <div class="profile-avatar-big">A</div>
+      <div class="profile-name">Alex Dubois</div>
+      <div class="profile-email">alex.dubois@email.com</div>
+      <div class="tier-badge" id="profile-tier"><span class="tier-dot"></span><span id="profile-tier-txt">Explorer</span></div>
+      <div class="profile-persona-badge" id="profile-persona-badge" style="margin-top:8px">🎓 Étudiant économe</div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-value">€48K</div><div class="stat-label">Flux annuel</div></div>
+      <div class="stat-card" id="stat-mid"><div class="stat-value" id="stat-mid-val">124</div><div class="stat-label" id="stat-mid-lbl">Transactions</div></div>
+      <div class="stat-card"><div class="stat-value">98%</div><div class="stat-label">Sécurité</div></div>
+    </div>
+    <div class="menu-section">
+      <div class="menu-section-title">Mon compte</div>
+      <div class="menu-item"><div class="menu-icon" style="background:rgba(124,58,237,.12)">👤</div><div class="menu-text"><div class="menu-title">Informations personnelles</div><div class="menu-sub">Nom, adresse, téléphone</div></div><div class="menu-arrow">›</div></div>
+      <div class="menu-item"><div class="menu-icon" style="background:rgba(37,99,235,.12)">🔒</div><div class="menu-text"><div class="menu-title">Sécurité & Auth</div><div class="menu-sub">PIN, biométrie, 2FA</div></div><div class="menu-arrow">›</div></div>
+      <div class="menu-item"><div class="menu-icon" style="background:rgba(16,185,129,.12)">💳</div><div class="menu-text"><div class="menu-title">Mes cartes</div><div class="menu-sub">2 cartes actives</div></div><div class="menu-arrow">›</div></div>
+    </div>
+    <div class="divider"></div>
+    <div class="menu-section" id="profile-pts-section" style="display:none">
+      <div class="menu-section-title">NOVA Points</div>
+      <div class="menu-item" style="background:rgba(251,191,36,.04);border-radius:16px;border:1px solid rgba(251,191,36,.12)">
+        <div class="menu-icon" style="background:rgba(251,191,36,.12)">⭐</div>
+        <div class="menu-text"><div class="menu-title" style="color:#fbbf24">Solde actuel</div><div class="menu-sub">3 420 pts — soit ~€34,20</div></div>
+        <div class="menu-arrow" style="color:#fbbf24">›</div>
+      </div>
+      <div class="menu-item" id="mult-menu" style="display:none"><div class="menu-icon" style="background:rgba(239,68,68,.1)">🔥</div><div class="menu-text"><div class="menu-title">Multiplicateur actif <span class="multiplier-badge">×2</span></div><div class="menu-sub">Valable jusqu'au 31 déc. 2026</div></div><div class="menu-arrow">›</div></div>
+      <div class="divider" style="margin-top:10px"></div>
+    </div>
+    <div class="menu-section">
+      <div class="menu-section-title">Préférences</div>
+      <div class="menu-item"><div class="menu-icon" style="background:rgba(245,158,11,.12)">🔔</div><div class="menu-text"><div class="menu-title">Notifications</div><div class="menu-sub">Alertes et push</div></div><div class="menu-arrow">›</div></div>
+      <div class="menu-item"><div class="menu-icon" style="background:rgba(99,102,241,.12)">🌍</div><div class="menu-text"><div class="menu-title">Langue & Région</div><div class="menu-sub">Français · EUR</div></div><div class="menu-arrow">›</div></div>
+    </div>
+    <button class="logout-btn" onclick="resetAll()">← Se déconnecter</button>
+    <div style="height:12px"></div>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-btn" onclick="navigate('home')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Accueil</span></button>
+    <button class="nav-btn" onclick="navigate('transactions')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg><span>Transactions</span></button>
+    <button class="nav-btn" onclick="navigate('transfer')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 18H6.83l2.58-2.59L8 14l-5 5 5 5 1.41-1.41L6.83 20H21v-2zM3 6h14.17l-2.58 2.59L16 10l5-5-5-5-1.41 1.41L17.17 4H3v2z"/></svg><span>Virement</span></button>
+    <button class="nav-btn active" onclick="navigate('profile')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><span>Profil</span></button>
+  </div>
+</div><!-- /screen-profile -->
+
+</div><!-- /phone -->
+
+<script>
+/* ── Data ──────────────────────────────────── */
+const OFFERS = [
+  { id:"miles",    icon:"✈️",  name:"Airline Miles",        desc:"Transfer your RevPoints to over 30 airline loyalty programmes, such as British Airways Avios or Air France–KLM Flying Blue, and turn everyday spending into flights." },
+  { id:"pay",      icon:"🏷️", name:"Revolut Pay discounts", desc:"Use your RevPoints to get an instant discount at checkout when paying with Revolut Pay at participating merchants." },
+  { id:"stays",    icon:"🏨",  name:"Stays",                desc:"Apply your RevPoints as a discount on hotel and holiday accommodation booked directly in the Revolut app, and earn extra points on the same booking." },
+  { id:"xp",       icon:"🎟️", name:"Experiences",          desc:"Redeem your RevPoints for reduced prices on tours, activities and attractions booked through the app." },
+  { id:"gift",     icon:"🎁",  name:"Gift Cards",           desc:"Exchange your RevPoints for gift cards from selected brands, a simple way to use your points on shopping." },
+  { id:"coffee",   icon:"☕",  name:"Coffee Explorer",      desc:"Buy a standard Nespresso subscription and get free exclusive monthly flavor tester packs and early access to functional coffees." },
+  { id:"multi",    icon:"🔥",  name:"Point Multiplier",     desc:"Get a brand new Nespresso Machine heavily discounted, PLUS earn double Revolut Points on every coffee capsule you buy." },
+];
+
+const PERSONAS = {
+  etudiant: { label:'Étudiant économe',    emoji:'🎓' },
+  voyageur: { label:'Grand voyageur',      emoji:'✈️' },
+  fidele:   { label:'Abonné fidèle',       emoji:'☕' },
+  pro:      { label:'Pro premium',         emoji:'💼' },
+};
+
+/* ── State ─────────────────────────────────── */
+const S = {
+  persona: null,
+  q1: null, q2: null,
+  offerPts: {},   // id -> points
+  totalPts: 10,
+  currentScreen: 'ob0',
+  amtStr: '0',
+  recipient: 'Thomas M.',
+};
+OFFERS.forEach(o => S.offerPts[o.id] = 0);
+
+/* ── Persona Selection ─────────────────────── */
+function selectPersona(card) {
+  document.querySelectorAll('.persona-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  S.persona = card.dataset.persona;
+  document.getElementById('ob0-next').disabled = false;
+}
+
+function goOb1() {
+  navigate('ob1');
+}
+
+/* ── Q Selection ───────────────────────────── */
+function pickQ(n, val) {
+  S['q'+n] = val;
+  const y = document.getElementById('q'+n+'y');
+  const no = document.getElementById('q'+n+'n');
+  y.classList.toggle('sel', val==='yes');
+  no.classList.toggle('sel', val==='no');
+  document.getElementById('ob1-next').disabled = !(S.q1 && S.q2);
+}
+
+function goOb2() {
+  buildOffers();
+  navigate('ob2');
+}
+
+/* ── Offer allocation ──────────────────────── */
+function buildOffers() {
+  const list = document.getElementById('offers-list');
+  list.innerHTML = '';
+  OFFERS.forEach(o => {
+    const card = document.createElement('div');
+    card.className = 'offer-card';
+    card.id = 'oc-'+o.id;
+    card.innerHTML = `
+      <div class="offer-icon">${o.icon}</div>
+      <div class="offer-info">
+        <div class="offer-name">${o.name}</div>
+        <div class="offer-desc">${o.desc}</div>
+      </div>
+      <div class="offer-ctrl">
+        <button class="ctrl-btn ctrl-minus" onclick="addPts('${o.id}',-1)">−</button>
+        <div class="ctrl-val" id="ov-${o.id}">0</div>
+        <button class="ctrl-btn ctrl-plus" onclick="addPts('${o.id}',1)">+</button>
+      </div>`;
+    list.appendChild(card);
+  });
+}
+
+function addPts(id, delta) {
+  const remaining = ptsRemaining();
+  const cur = S.offerPts[id];
+  const next = cur + delta;
+  if (next < 0) return;
+  if (delta > 0 && remaining <= 0) return;
+  S.offerPts[id] = next;
+  document.getElementById('ov-'+id).textContent = next;
+  const card = document.getElementById('oc-'+id);
+  card.classList.toggle('has-points', next > 0);
+  updatePtsUI();
+}
+
+function ptsRemaining() {
+  const used = Object.values(S.offerPts).reduce((a,b)=>a+b,0);
+  return S.totalPts - used;
+}
+
+function updatePtsUI() {
+  const rem = ptsRemaining();
+  document.getElementById('pts-remaining').textContent = rem;
+  document.getElementById('pts-bar').style.width = (rem/S.totalPts*100)+'%';
+}
+
+function goOb3() {
+  // Build recap chips
+  const chips = document.getElementById('why-chosen-chips');
+  chips.innerHTML = '';
+  OFFERS.forEach(o => {
+    if (S.offerPts[o.id] > 0) {
+      chips.innerHTML += `<div class="chosen-chip">${o.icon} ${o.name}<span class="chip-pts">${S.offerPts[o.id]}pt</span></div>`;
+    }
+  });
+  if (!chips.innerHTML) {
+    chips.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,.3)">Aucun point alloué</div>';
+  }
+  navigate('ob3');
+}
+
+/* ── Reason chips ──────────────────────────── */
+function toggleReason(el) {
+  el.classList.toggle('sel');
+}
+
+/* ── Finish ────────────────────────────────── */
+function finishOnboarding() {
+  applyPersonalization();
+  navigate('home');
+}
+
+function applyPersonalization() {
+  // Persona
+  const p = PERSONAS[S.persona] || PERSONAS.etudiant;
+  document.getElementById('persona-mini').textContent = p.emoji + ' ' + p.label;
+  document.getElementById('profile-persona-badge').textContent = p.emoji + ' ' + p.label;
+
+  // Tier (Revolut = premium)
+  const revolut = S.q1 === 'yes';
+  const nespresso = S.q2 === 'yes';
+  const tier = revolut ? 'Explorer & Point Multiplier' : 'Explorer';
+
+  document.getElementById('tier-text').textContent = tier;
+  document.getElementById('profile-tier-txt').textContent = tier;
+  const badge = document.getElementById('tier-badge');
+  const pbadge = document.getElementById('profile-tier');
+  [badge, pbadge].forEach(b => b.classList.toggle('premium', revolut));
+
+  // Points banner
+  document.getElementById('points-banner').style.display = revolut ? '' : 'none';
+  document.getElementById('mult-badge').style.display = revolut ? 'inline' : 'none';
+  document.getElementById('profile-pts-section').style.display = revolut ? '' : 'none';
+  document.getElementById('mult-menu').style.display = revolut ? '' : 'none';
+  if (revolut) {
+    document.getElementById('stat-mid-val').textContent = '3 420';
+    document.getElementById('stat-mid-lbl').textContent = 'NOVA pts';
+  }
+
+  // Nespresso
+  document.getElementById('nespresso-offer').style.display = nespresso ? '' : 'none';
+
+  // Tx points
+  if (revolut) {
+    ['txp1','txp2','txp3','txp4','txp5','txp6','txp7'].forEach(id => {
+      const el = document.getElementById(id); if(el) el.style.display='';
+    });
+  }
+  if (revolut && nespresso) {
+    const el = document.getElementById('txp-nsp'); if(el) el.style.display='';
+  }
+
+  // Offer highlights on home
+  buildHomeHighlights();
+}
+
+function buildHomeHighlights() {
+  const container = document.getElementById('home-offer-highlights');
+  container.innerHTML = '';
+  const chosen = OFFERS.filter(o => S.offerPts[o.id] > 0).slice(0, 2);
+  if (!chosen.length) return;
+
+  container.innerHTML = '<div class="section-title">Vos offres activées</div>';
+  chosen.forEach(o => {
+    container.innerHTML += `
+      <div style="margin:0 20px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:13px 15px;display:flex;align-items:center;gap:11px;cursor:pointer">
+        <span style="font-size:24px">${o.icon}</span>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:800;color:#fff">${o.name}</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:2px">${S.offerPts[o.id]} pt${S.offerPts[o.id]>1?'s':''} alloué${S.offerPts[o.id]>1?'s':''}</div>
+        </div>
+        <div style="font-size:15px;color:rgba(255,255,255,.22)">›</div>
+      </div>`;
+  });
+}
+
+/* ── Navigation ────────────────────────────── */
+function navigate(screen) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-'+screen).classList.add('active');
+  S.currentScreen = screen;
+}
+
+function resetAll() {
+  S.persona=null; S.q1=null; S.q2=null;
+  OFFERS.forEach(o => S.offerPts[o.id]=0);
+  S.amtStr='0';
+  // Reset ob0
+  document.querySelectorAll('.persona-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('ob0-next').disabled=true;
+  // Reset ob1
+  ['q1y','q1n','q2y','q2n'].forEach(id=>document.getElementById(id).classList.remove('sel'));
+  document.getElementById('ob1-next').disabled=true;
+  S.q1=null; S.q2=null;
+  navigate('ob0');
+}
+
+/* ── Transfer ──────────────────────────────── */
+function selectContact(name, iban, letter, grad) {
+  S.recipient = name;
+  document.getElementById('rec-nm').textContent = name;
+  document.getElementById('rec-ib').textContent = iban.slice(0,18)+' ···';
+  document.getElementById('rec-av').textContent = letter;
+  document.getElementById('rec-av').style.background = grad;
+}
+function numIn(v) {
+  let s=S.amtStr;
+  if(v==='.'&&s.includes('.'))return;
+  if(v==='.'&&s==='0'){S.amtStr='0.';}
+  else if(s==='0'&&v!=='.'){S.amtStr=v;}
+  else if(s.includes('.')&&s.split('.')[1].length>=2)return;
+  else{S.amtStr=s+v;}
+  document.getElementById('amt').textContent=S.amtStr;
+}
+function numDel(){
+  S.amtStr=S.amtStr.length<=1?'0':S.amtStr.slice(0,-1);
+  document.getElementById('amt').textContent=S.amtStr;
+}
+function doTransfer(){
+  const a=parseFloat(S.amtStr)||0;
+  if(!a)return;
+  document.getElementById('suc-txt').textContent='€'+a.toFixed(2).replace('.',',')+' envoyés à '+S.recipient;
+  document.getElementById('tr-success').classList.add('show');
+}
+function closeSuccess(){
+  document.getElementById('tr-success').classList.remove('show');
+  S.amtStr='0';
+  document.getElementById('amt').textContent='0';
+  navigate('home');
+}
+
+/* ── Utils ─────────────────────────────────── */
+function setPill(el){
+  document.querySelectorAll('#screen-transactions .pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+}
+let toastT=null;
+function showToast(ico, txt){
+  const t=document.getElementById('toast-home');
+  document.getElementById('toast-txt').textContent=ico+' '+txt;
+  t.classList.add('show');
+  if(toastT)clearTimeout(toastT);
+  toastT=setTimeout(()=>t.classList.remove('show'),2400);
+}
+</script>
+</body>
+</html>
