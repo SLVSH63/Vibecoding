@@ -1,5 +1,7 @@
 # Vibecoding
 
+*Dernière mise à jour : 28 octobre 2026*
+
 Project documentation for Vibecoding.
 
 ## Overview
